@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcade Game Hub</title>
+    <style>
+        /* Base Page Setup */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* ========================================== */
+        /* HOME DASHBOARD STYLING                     */
+        /* ========================================== */
+        #home-dashboard {
+            text-align: center;
+            background: #ffffff;
+            padding: 40px;
+            border: 2px solid #535353;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        #home-dashboard h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: #777;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        /* Game Grid Box Selection Buttons */
+        .game-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .launcher-btn {
+            padding: 15px 20px;
+            font-size: 16px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Dino Launch Button specific color */
+        .btn-dino {
+            background-color: #535353;
+            box-shadow: 0 4px 0px #333;
+        }
+        .btn-dino:hover { background-color: #444; }
+        .btn-dino:active { transform: translateY(4px); box-shadow: 0 0px 0px #333; }
+
+        /* Future Games Placeholder Styling */
+        .btn-locked {
+            background-color: #ccc;
+            color: #888;
+            cursor: not-allowed;
+            box-shadow: 0 4px 0px #aaa;
+        }
+
+        /* ========================================== */
+        /* GAME VIEWS WINDOWS                         */
+        /* ========================================== */
+        #game-container {
+            display: none; /* Hidden by default until launched */
+            position: relative;
+            width: 600px;
+            height: 200px;
+            background-color: #fff;
+            border-bottom: 2px solid #535353;
+            overflow: hidden;
+        }
+
+        /* Retro Dinosaur Sprite */
+        #dino {
+            position: absolute;
+            left: 50px;
+            bottom: 0;
+            width: 40px;
+            height: 40px;
+            background-color: #535353;
+            border-radius: 4px;
+        }
+
+        /* Cactus Obstacle Sprite */
+        #cactus {
+            position: absolute;
+            right: -20px;
+            bottom: 0;
+            width: 20px;
+            height: 40px;
+            background-color: #8a2be2;
+            border-radius: 2px;
+        }
+
+        /* Live Score Tracker */
+        #score-board {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #535353;
+        }
+
+        /* Game Over / Pause Screens Overlay */
+        #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.85);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        #game-over-screen h1 {
+            color: #535353;
+            margin-bottom: 15px;
+            font-size: 28px;
+            letter-spacing: 2px;
+        }
+
+        .menu-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Dynamic Actions Navigation UI Control Buttons */
+        .action-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            color: #fff;
+            background-color: #535353;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 4px 0px #333;
+            transition: all 0.1s ease;
+        }
+        .action-btn:hover { background-color: #444; }
+        .action-btn:active { transform: translateY(4px); box-shadow: 0 0px 0px #333; }
+
+        /* CSS Animations for Gameplay Engine */
+        .jump {
+            animation: jumpAnimation 0.5s linear;
+        }
+
+        @keyframes jumpAnimation {
+            0% { bottom: 0; }
+            40% { bottom: 110px; }
+            60% { bottom: 110px; }
+            100% { bottom: 0; }
+        }
+
+        .block-move {
+            animation: blockMoveAnimation 1.5s infinite linear;
+        }
+
+        @keyframes blockMoveAnimation {
+            0% { left: 600px; }
+            100% { left: -20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SECTION 1: CENTRAL HOME HUB MENU -->
+    <div id="home-dashboard">
+        <h1>ARCADE HUB</h1>
+        <div class="subtitle">Select a game to start playing</div>
+        
+        <div class="game-grid">
+            <!-- Button linked to activate our game framework below -->
+            <button class="launcher-btn btn-dino" onclick="launchDinoGame()">
+                <span>🦖 Chrome Dino Game</span>
+                <span>PLAY →</span>
+            </button>
+
+            <!-- Example slots showing where you can add new games easily later -->
+            <button class="launcher-btn btn-locked" disabled>
+                <span>🐍 Snake Game</span>
+                <span>LOCKED</span>
+            </button>
+            <button class="launcher-btn btn-locked" disabled>
+                <span>🧱 Tetris Clone</span>
+                <span>LOCKED</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- SECTION 2: DINOSAUR RUNNER GAME VIEW -->
+    <div id="game-container">
+        <div id="score-board">Score: 0</div>
+        <div id="dino"></div>
+        <div id="cactus"></div>
+
+        <!-- Pop-up Overlay Menu options displayed during Game Over status -->
+        <div id="game-over-screen">
+            <h1>GAME OVER</h1>
+            <div class="menu-buttons">
+                <button class="action-btn" onclick="resetAndPlayAgain()">🔄 TRY AGAIN</button>
+                <button class="action-btn" onclick="exitToDashboard()">🏠 HOME</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements Hooks
+        const homeDashboard = document.getElementById("home-dashboard");
+        const gameContainer = document.getElementById("game-container");
+        const dino = document.getElementById("dino");
+        const cactus = document.getElementById("cactus");
+        const scoreBoard = document.getElementById("score-board");
+        const gameOverScreen = document.getElementById("game-over-screen");
+
+        // Game Core States Tracking variables 
+        let score = 0;
+        let isAlive = false;
+        let scoreInterval;
+        let physicsEngineLoop;
+
+        // Spacebar controller event hook configuration
+        document.addEventListener("keydown", function(event) {
+            if (event.code === "Space" && isAlive) {
+                jump();
+            }
+        });
+
+        // Click / Mobile click controller event configuration on target window container
+        gameContainer.addEventListener("click", function() {
+            if (isAlive) {
+                jump();
+            }
+        });
+
+        // ACTION: Launch and clear environment view states from Hub
+        function launchDinoGame() {
+            homeDashboard.style.display = "none";
+            gameContainer.style.display = "block";
+            resetAndPlayAgain();
+        }
+
+        // ACTION: Shut down execution loops completely and cleanly swap container wrappers back to Home Dashboard view
+        function exitToDashboard() {
+            isAlive = false;
+            clearInterval(scoreInterval);
+            clearInterval(physicsEngineLoop);
+            cactus.classList.remove("block-move");
+            
+            gameOverScreen.style.display = "none";
+            gameContainer.style.display = "none";
+            homeDashboard.style.display = "block"; // Return dashboard view back forward
+        }
+
+        function jump() {
+            if (!dino.classList.contains("jump")) {
+                dino.classList.add("jump");
+                setTimeout(function() {
+                    dino.classList.remove("jump");
+                }, 500);
+            }
+        }
+
+        function startScoreCounter() {
+            scoreInterval = setInterval(() => {
+                if (isAlive) {
+                    score++;
+                    scoreBoard.innerText = "Score: " + score;
+                }
+            }, 100);
+        }
+
+        function startCollisionDetection() {
+            physicsEngineLoop = setInterval(function() {
+                let dinoBottom = parseInt(window.getComputedStyle(dino).getPropertyValue("bottom"));
+                let cactusLeft = parseInt(window.getComputedStyle(cactus).getPropertyValue("left"));
+
+                if (cactusLeft > 50 && cactusLeft < 90 && dinoBottom <= 40) {
+                    // Trigger game terminal state criteria
+                    isAlive = false;
+                    clearInterval(scoreInterval);
