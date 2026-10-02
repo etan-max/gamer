@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Dinosaur Game</title>
+    <style>
+        /* Base Page Setup */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Main Game Box Container */
+        #game-container {
+            position: relative;
+            width: 600px;
+            height: 200px;
+            background-color: #fff;
+            border-bottom: 2px solid #535353;
+            overflow: hidden;
+        }
+
+        /* Retro Dinosaur Sprite */
+        #dino {
+            position: absolute;
+            left: 50px;
+            bottom: 0;
+            width: 40px;
+            height: 40px;
+            background-color: #535353;
+            border-radius: 4px;
+        }
+
+        /* Cactus Obstacle Sprite */
+        #cactus {
+            position: absolute;
+            right: -20px;
+            bottom: 0;
+            width: 20px;
+            height: 40px;
+            background-color: #8a2be2; /* Retro purple contrast cactus */
+            border-radius: 2px;
+        }
+
+        /* Live Score Tracker */
+        #score-board {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #535353;
+        }
+
+        /* Game Over Popup Screen Menu */
+        #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.85);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        #game-over-screen h1 {
+            color: #535353;
+            margin-bottom: 15px;
+            font-size: 28px;
+            letter-spacing: 2px;
+        }
+
+        /* Home Button Styling */
+        .home-btn {
+            padding: 10px 24px;
+            font-size: 16px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            color: #fff;
+            background-color: #535353;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 4px 0px #333;
+            transition: all 0.1s ease;
+        }
+
+        .home-btn:hover {
+            background-color: #444;
+        }
+
+        .home-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0px #333;
+        }
+
+        /* CSS Animations for Jump and Movement */
+        .jump {
+            animation: jumpAnimation 0.5s linear;
+        }
+
+        @keyframes jumpAnimation {
+            0% { bottom: 0; }
+            40% { bottom: 110px; }
+            60% { bottom: 110px; }
+            100% { bottom: 0; }
+        }
+
+        .block-move {
+            animation: blockMoveAnimation 1.5s infinite linear;
+        }
+
+        @keyframes blockMoveAnimation {
+            0% { left: 600px; }
+            100% { left: -20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- Live UI Elements -->
+        <div id="score-board">Score: 0</div>
+        <div id="dino"></div>
+        <div id="cactus" class="block-move"></div>
+
+        <!-- Overlays -->
+        <div id="game-over-screen">
+            <h1>GAME OVER</h1>
+            <!-- The Requested Home / Restart Button -->
+            <button class="home-btn" onclick="returnToHome()">🏠 HOME</button>
+        </div>
+    </div>
+
+    <script>
+        const dino = document.getElementById("dino");
+        const cactus = document.getElementById("cactus");
+        const scoreBoard = document.getElementById("score-board");
+        const gameOverScreen = document.getElementById("game-over-screen");
+
+        let score = 0;
+        let isAlive = true;
+        let scoreInterval;
+
+        // Start score counting right away
+        startScoreCounter();
+
+        // Listen for Jump inputs (Spacebar)
+        document.addEventListener("keydown", function(event) {
+            if (event.code === "Space") {
+                jump();
+            }
+        });
+
+        // Listen for tap/click mobile & mouse inputs on the container
+        document.getElementById("game-container").addEventListener("click", function() {
+            jump();
+        });
+
+        function jump() {
+            // Prevent double-jumping while the dino animation is already running
+            if (!dino.classList.contains("jump") && isAlive) {
+                dino.classList.add("jump");
+                
+                // Clear the class after the animation ends (500ms)
+                setTimeout(function() {
+                    dino.classList.remove("jump");
+                }, 500);
+            }
+        }
+
+        function startScoreCounter() {
+            scoreInterval = setInterval(() => {
+                if (isAlive) {
+                    score++;
+                    scoreBoard.innerText = "Score: " + score;
+                }
+            }, 100);
+        }
+
+        // Live Frame Checking for Collisions
+        let checkCollision = setInterval(function() {
+            if (!isAlive) return;
+
+            // Get absolute X and Y bounding values of elements
+            let dinoBottom = parseInt(window.getComputedStyle(dino).getPropertyValue("bottom"));
+            let cactusLeft = parseInt(window.getComputedStyle(cactus).getPropertyValue("left"));
+
+            // Collision parameters (Width/Height overlap checks)
+            if (cactusLeft > 50 && cactusLeft < 90 && dinoBottom <= 40) {
+                // End game conditions
+                isAlive = false;
+                clearInterval(scoreInterval);
+                cactus.classList.remove("block-move"); // Freeze cactus place
+                gameOverScreen.style.display = "flex"; // Reveal Home Overlay menu
+            }
+        }, 10);
+
+        // Home Button Action Function
+        function returnToHome() {
+            // Reset gameplay states
+            score = 0;
+            isAlive = true;
+            scoreBoard.innerText = "Score: 0";
+            
+            // Hide menu overlay
+            gameOverScreen.style.display = "none";
+            
+            // Re-apply movements and restart game ticks
+            cactus.style.left = "600px";
+            cactus.classList.add("block-move");
+            
+            clearInterval(scoreInterval);
+            startScoreCounter();
+        }
+    </script>
+</body>
+</html>
